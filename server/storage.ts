@@ -1,60 +1,49 @@
-import { type Chat, type Message, type InsertChat, type InsertMessage } from "@shared/schema";
+import { type Chat, type Message } from "@shared/schema";
 
 export interface IStorage {
-  createChat(chat: InsertChat): Promise<Chat>;
+  createChat(chat: { title: string }): Promise<Chat>;
   getChats(): Promise<Chat[]>;
   getChat(id: number): Promise<Chat | undefined>;
   getMessages(chatId: number): Promise<Message[]>;
-  createMessage(message: InsertMessage): Promise<Message>;
+  createMessage(message: { chatId: number; content: string; role: string; imageUrl: string | null }): Promise<Message>;
 }
 
-export class MemStorage implements IStorage {
-  private chats: Map<number, Chat>;
-  private messages: Map<number, Message>;
-  private chatId: number = 1;
-  private messageId: number = 1;
+let chats: Chat[] = [];
+let messages: Message[] = [];
+let nextChatId = 1;
+let nextMessageId = 1;
 
-  constructor() {
-    this.chats = new Map();
-    this.messages = new Map();
-  }
+export const storage: IStorage = {
+  getChats: async () => chats,
 
-  async createChat(chat: InsertChat): Promise<Chat> {
-    const id = this.chatId++;
-    const newChat: Chat = {
-      id,
-      ...chat,
+  createChat: async (data: { title: string }): Promise<Chat> => {
+    const chat = {
+      id: nextChatId++,
+      title: data.title,
       createdAt: new Date(),
     };
-    this.chats.set(id, newChat);
-    return newChat;
-  }
+    chats.push(chat);
+    return chat;
+  },
 
-  async getChats(): Promise<Chat[]> {
-    return Array.from(this.chats.values())
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  }
+  getChat: async (id: number): Promise<Chat | undefined> => {
+    return chats.find(chat => chat.id === id);
+  },
 
-  async getChat(id: number): Promise<Chat | undefined> {
-    return this.chats.get(id);
-  }
+  getMessages: async (chatId: number): Promise<Message[]> => {
+    return messages.filter(m => m.chatId === chatId);
+  },
 
-  async getMessages(chatId: number): Promise<Message[]> {
-    return Array.from(this.messages.values())
-      .filter(msg => msg.chatId === chatId)
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-  }
-
-  async createMessage(message: InsertMessage): Promise<Message> {
-    const id = this.messageId++;
-    const newMessage: Message = {
-      id,
-      ...message,
+  createMessage: async (data: { chatId: number; content: string; role: string; imageUrl: string | null }): Promise<Message> => {
+    const message = {
+      id: nextMessageId++,
+      chatId: data.chatId,
+      content: data.content,
+      role: data.role as "user" | "assistant",
+      imageUrl: data.imageUrl,
       createdAt: new Date(),
     };
-    this.messages.set(id, newMessage);
-    return newMessage;
+    messages.push(message);
+    return message;
   }
-}
-
-export const storage = new MemStorage();
+};
