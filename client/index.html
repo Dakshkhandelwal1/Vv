@@ -9,8 +9,9 @@
 </head>
 <body>
     <div class="container">
-        <div class="sidebar" id="sidebar">
-            <!-- Chat list will be populated here -->
+        <div class="sidebar">
+            <button class="new-chat-btn" id="newChatBtn">New Chat</button>
+            <div class="chat-list" id="sidebar"></div>
         </div>
         
         <div class="main-content">
@@ -19,14 +20,15 @@
                 <p>Transform your ideas into images with AI</p>
             </header>
             
-            <main>
             <div class="chat-container" id="chatContainer"></div>
             
             <div class="input-container">
-                <textarea id="userInput" placeholder="Describe the image you want to generate..."></textarea>
-                <button id="generateBtn">Generate Image</button>
+                <form id="messageForm">
+                    <textarea id="userInput" placeholder="Describe the image you want to generate..." rows="1"></textarea>
+                    <button type="submit" id="generateBtn">Generate</button>
+                </form>
             </div>
-        </main>
+        </div>
     </div>
     <script src="/src/main.js"></script>
 </body>

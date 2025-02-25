@@ -3,6 +3,7 @@ const chatContainer = document.getElementById('chatContainer');
 const userInput = document.getElementById('userInput');
 const generateBtn = document.getElementById('generateBtn');
 const sidebar = document.getElementById('sidebar');
+const newChatBtn = document.getElementById('newChatBtn');
 let currentChatId = null;
 
 async function createNewChat() {
@@ -19,6 +20,7 @@ async function createNewChat() {
     const chat = await response.json();
     currentChatId = chat.id;
     loadChats();
+    chatContainer.innerHTML = '';
     return chat;
   } catch (error) {
     console.error('Error creating chat:', error);
@@ -34,7 +36,7 @@ async function loadChats() {
     chats.forEach(chat => {
       const chatElement = document.createElement('div');
       chatElement.className = 'chat-item';
-      chatElement.textContent = chat.title;
+      chatElement.textContent = `Chat ${chat.id}`;
       chatElement.onclick = () => selectChat(chat.id);
       sidebar.appendChild(chatElement);
     });
@@ -57,10 +59,25 @@ async function selectChat(chatId) {
   }
 }
 
+function createLoadingDots() {
+  const dots = document.createElement('div');
+  dots.className = 'loading';
+  for (let i = 0; i < 3; i++) {
+    const span = document.createElement('span');
+    dots.appendChild(span);
+  }
+  return dots;
+}
+
 async function addMessage(content, role, imageUrl = null) {
   const messageDiv = document.createElement('div');
   messageDiv.className = `message ${role}-message`;
-  messageDiv.textContent = content;
+  
+  if (content === 'Generating image...') {
+    messageDiv.appendChild(createLoadingDots());
+  } else {
+    messageDiv.textContent = content;
+  }
 
   if (imageUrl) {
     const img = document.createElement('img');
@@ -90,11 +107,6 @@ async function generateImage() {
     addMessage(prompt, 'user');
     userInput.value = '';
 
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'message ai-message loading';
-    loadingDiv.textContent = 'Generating image';
-    chatContainer.appendChild(loadingDiv);
-
     const response = await fetch(`/api/chats/${currentChatId}/messages`, {
       method: 'POST',
       headers: {
@@ -107,8 +119,6 @@ async function generateImage() {
     });
 
     const messages = await response.json();
-    chatContainer.removeChild(loadingDiv);
-    
     if (messages[1]) {
       addMessage(messages[1].content, 'assistant', messages[1].imageUrl);
     }
@@ -121,12 +131,17 @@ async function generateImage() {
   }
 }
 
-generateBtn.addEventListener('click', generateImage);
-userInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    generateImage();
-  }
+document.getElementById('messageForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  generateImage();
+});
+
+newChatBtn.addEventListener('click', createNewChat);
+
+// Auto-resize textarea
+userInput.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = (this.scrollHeight) + 'px';
 });
 
 // Load initial chats
