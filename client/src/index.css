@@ -30,12 +30,26 @@ body {
 }
 
 .container::before {
-  content: 'Vidhya AI';
+  content: 'Turn your imaginations into images';
   position: fixed;
-  font-size: 15rem;
+  font-size: 4rem;
   opacity: 0.03;
   font-weight: bold;
-  top: 50%;
+  top: 65%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+}
+
+.container::after {
+  content: 'Vidhya AI';
+  position: fixed;
+  font-size: 10rem;
+  opacity: 0.03;
+  font-weight: bold;
+  top: 35%;
   left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
