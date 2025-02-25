@@ -6,6 +6,7 @@
   --text-light: #9ca3af;
   --sidebar-bg: #1f2937;
   --message-bg: #374151;
+  --border: #374151;
 }
 
 * {
@@ -24,14 +25,30 @@ body {
 .container {
   display: flex;
   height: 100vh;
-  width: 100%;
+  background: var(--background);
+  position: relative;
+}
+
+.container::before {
+  content: 'Vidhya AI';
+  position: fixed;
+  font-size: 15rem;
+  opacity: 0.03;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .sidebar {
-  width: 280px;
+  width: 200px;
   background: var(--sidebar-bg);
-  padding: 1.5rem;
-  border-right: 1px solid #374151;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
 }
 
 .new-chat-btn {
@@ -73,6 +90,30 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  padding: 1rem;
+  z-index: 1;
+}
+
+.empty-chat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: var(--text);
+}
+
+.empty-chat img {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 1.5rem;
+}
+
+.empty-chat h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
 }
 
 header {
