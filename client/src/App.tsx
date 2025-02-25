@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Chat, Message } from '@shared/schema';
 
@@ -49,30 +49,37 @@ export default function App() {
   });
 
   return (
-    <div className="flex h-screen bg-background text-foreground">
-      <div className="w-64 border-r p-4 flex flex-col">
-        <div className="mb-4">
-          <input
-            type="text"
-            value={newChatTitle}
-            onChange={e => setNewChatTitle(e.target.value)}
-            placeholder="New chat title"
-            className="w-full p-2 border rounded"
-          />
-          <button
-            onClick={() => createChat.mutate(newChatTitle)}
-            className="w-full mt-2 p-2 bg-primary text-white rounded"
-          >
-            Create Chat
-          </button>
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <div className="w-80 bg-white shadow-lg p-6 flex flex-col">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Image AI Chat</h1>
+          <div className="space-y-3">
+            <input
+              type="text"
+              value={newChatTitle}
+              onChange={e => setNewChatTitle(e.target.value)}
+              placeholder="New chat title"
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={() => createChat.mutate(newChatTitle)}
+              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              Create New Chat
+            </button>
+          </div>
         </div>
+        
         <div className="flex-1 overflow-auto">
           {chats?.map(chat => (
             <div
               key={chat.id}
               onClick={() => setSelectedChat(chat)}
-              className={`p-2 cursor-pointer rounded ${
-                selectedChat?.id === chat.id ? 'bg-accent' : ''
+              className={`p-4 mb-2 rounded-lg cursor-pointer transition ${
+                selectedChat?.id === chat.id 
+                  ? 'bg-blue-100 text-blue-800' 
+                  : 'hover:bg-gray-100'
               }`}
             >
               {chat.title}
@@ -80,60 +87,69 @@ export default function App() {
           ))}
         </div>
       </div>
+
+      {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {selectedChat ? (
           <>
-            <div className="p-4 border-b">
-              <h1 className="text-xl font-bold">{selectedChat.title}</h1>
+            <div className="bg-white shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-800">{selectedChat.title}</h2>
             </div>
-            <div className="flex-1 overflow-auto p-4">
+            
+            <div className="flex-1 overflow-auto p-6 space-y-4">
               {messages?.map(message => (
                 <div
                   key={message.id}
-                  className={`mb-4 ${
-                    message.role === 'user' ? 'text-right' : ''
-                  }`}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div
-                    className={`inline-block p-2 rounded ${
-                      message.role === 'user'
-                        ? 'bg-primary text-white'
-                        : 'bg-accent'
-                    }`}
-                  >
-                    {message.content}
+                  <div className={`max-w-lg rounded-lg p-4 ${
+                    message.role === 'user' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-200'
+                  }`}>
+                    <p>{message.content}</p>
+                    {message.imageUrl && (
+                      <img 
+                        src={message.imageUrl} 
+                        alt="Generated" 
+                        className="mt-2 rounded-lg max-w-md"
+                      />
+                    )}
                   </div>
-                  {message.imageUrl && (
-                    <img
-                      src={message.imageUrl}
-                      alt="Generated"
-                      className="mt-2 max-w-sm rounded"
-                    />
-                  )}
                 </div>
               ))}
             </div>
-            <div className="p-4 border-t">
-              <div className="flex gap-2">
+
+            <div className="bg-white shadow-lg p-6">
+              <form 
+                onSubmit={e => {
+                  e.preventDefault();
+                  if (newMessage.trim()) {
+                    sendMessage.mutate(newMessage);
+                  }
+                }}
+                className="flex space-x-4"
+              >
                 <input
                   type="text"
                   value={newMessage}
                   onChange={e => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 p-2 border rounded"
+                  placeholder="Describe the image you want to generate..."
+                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
-                  onClick={() => sendMessage.mutate(newMessage)}
-                  className="p-2 bg-primary text-white rounded"
+                  type="submit"
+                  disabled={sendMessage.isPending}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
                 >
-                  Send
+                  Generate
                 </button>
-              </div>
+              </form>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            Select a chat to start messaging
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            Select a chat or create a new one to start generating images
           </div>
         )}
       </div>
