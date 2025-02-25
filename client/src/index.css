@@ -106,18 +106,19 @@ body {
 
 header {
   text-align: center;
-  padding: 2rem;
+  padding: 0.75rem;
   background: var(--sidebar-bg);
 }
 
 header h1 {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   color: var(--primary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 header p {
   color: var(--text-light);
+  font-size: 0.875rem;
 }
 
 .chat-container {
