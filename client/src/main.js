@@ -19,7 +19,7 @@ async function createNewChat() {
     });
     const chat = await response.json();
     currentChatId = chat.id;
-    loadChats();
+    await loadChats();
     chatContainer.innerHTML = '';
     return chat;
   } catch (error) {
@@ -59,25 +59,13 @@ async function selectChat(chatId) {
   }
 }
 
-function createLoadingDots() {
-  const dots = document.createElement('div');
-  dots.className = 'loading';
-  for (let i = 0; i < 3; i++) {
-    const span = document.createElement('span');
-    dots.appendChild(span);
-  }
-  return dots;
-}
-
-async function addMessage(content, role, imageUrl = null) {
+function addMessage(content, role, imageUrl = null) {
   const messageDiv = document.createElement('div');
   messageDiv.className = `message ${role}-message`;
   
-  if (content === 'Generating image...') {
-    messageDiv.appendChild(createLoadingDots());
-  } else {
-    messageDiv.textContent = content;
-  }
+  const textSpan = document.createElement('span');
+  textSpan.textContent = content;
+  messageDiv.appendChild(textSpan);
 
   if (imageUrl) {
     const img = document.createElement('img');
@@ -104,9 +92,17 @@ async function generateImage() {
   userInput.disabled = true;
 
   try {
+    // Add user message
     addMessage(prompt, 'user');
     userInput.value = '';
 
+    // Add loading message
+    const loadingMessage = document.createElement('div');
+    loadingMessage.className = 'message assistant-message';
+    loadingMessage.innerHTML = '<span class="loading-dots">Generating image</span>';
+    chatContainer.appendChild(loadingMessage);
+
+    // Make API request
     const response = await fetch(`/api/chats/${currentChatId}/messages`, {
       method: 'POST',
       headers: {
@@ -119,9 +115,15 @@ async function generateImage() {
     });
 
     const messages = await response.json();
+    
+    // Remove loading message
+    chatContainer.removeChild(loadingMessage);
+
+    // Add AI response with image
     if (messages[1]) {
       addMessage(messages[1].content, 'assistant', messages[1].imageUrl);
     }
+
   } catch (error) {
     console.error('Error:', error);
     addMessage('Sorry, there was an error generating the image.', 'assistant');
