@@ -117,11 +117,15 @@ async function generateImage() {
     const messages = await response.json();
     
     // Remove loading message
-    chatContainer.removeChild(loadingMessage);
+    if (loadingMessage && loadingMessage.parentNode === chatContainer) {
+      chatContainer.removeChild(loadingMessage);
+    }
 
     // Add AI response with image
-    if (messages[1]) {
+    if (messages && messages.length > 1 && messages[1].imageUrl) {
       addMessage(messages[1].content, 'assistant', messages[1].imageUrl);
+    } else {
+      addMessage('Failed to generate image. Please try again.', 'assistant');
     }
 
   } catch (error) {
