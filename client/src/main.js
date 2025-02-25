@@ -1,63 +1,5 @@
 
-const chatContainer = document.getElementById('chatContainer');
-const userInput = document.getElementById('userInput');
-const generateBtn = document.getElementById('generateBtn');
-const sidebar = document.getElementById('sidebar');
-const newChatBtn = document.getElementById('newChatBtn');
 let currentChatId = null;
-
-async function createNewChat() {
-  try {
-    const response = await fetch('/api/chats', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: 'New Chat'
-      })
-    });
-    const chat = await response.json();
-    currentChatId = chat.id;
-    await loadChats();
-    chatContainer.innerHTML = '';
-    return chat;
-  } catch (error) {
-    console.error('Error creating chat:', error);
-  }
-}
-
-async function loadChats() {
-  try {
-    const response = await fetch('/api/chats');
-    const chats = await response.json();
-    sidebar.innerHTML = '';
-    
-    chats.forEach(chat => {
-      const chatElement = document.createElement('div');
-      chatElement.className = 'chat-item';
-      chatElement.textContent = `Chat ${chat.id}`;
-      chatElement.onclick = () => selectChat(chat.id);
-      sidebar.appendChild(chatElement);
-    });
-  } catch (error) {
-    console.error('Error loading chats:', error);
-  }
-}
-
-async function selectChat(chatId) {
-  currentChatId = chatId;
-  chatContainer.innerHTML = '';
-  try {
-    const response = await fetch(`/api/chats/${chatId}/messages`);
-    const messages = await response.json();
-    messages.forEach(message => {
-      addMessage(message.content, message.role, message.imageUrl);
-    });
-  } catch (error) {
-    console.error('Error loading messages:', error);
-  }
-}
 
 function addMessage(content, role, imageUrl = null) {
   const messageDiv = document.createElement('div');
@@ -79,6 +21,61 @@ function addMessage(content, role, imageUrl = null) {
   chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
+async function loadChats() {
+  try {
+    const response = await fetch('/api/chats');
+    const chats = await response.json();
+    
+    sidebar.innerHTML = '';
+    chats.forEach(chat => {
+      const chatDiv = document.createElement('div');
+      chatDiv.className = 'chat-item';
+      chatDiv.textContent = chat.title;
+      chatDiv.onclick = () => loadChat(chat.id);
+      sidebar.appendChild(chatDiv);
+    });
+  } catch (error) {
+    console.error('Error loading chats:', error);
+  }
+}
+
+async function createNewChat() {
+  try {
+    const response = await fetch('/api/chats', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: 'New Chat'
+      })
+    });
+    
+    const chat = await response.json();
+    currentChatId = chat.id;
+    chatContainer.innerHTML = '';
+    await loadChats();
+    return chat;
+  } catch (error) {
+    console.error('Error creating chat:', error);
+  }
+}
+
+async function loadChat(chatId) {
+  try {
+    currentChatId = chatId;
+    const response = await fetch(`/api/chats/${chatId}/messages`);
+    const messages = await response.json();
+    
+    chatContainer.innerHTML = '';
+    messages.forEach(msg => {
+      addMessage(msg.content, msg.role, msg.imageUrl);
+    });
+  } catch (error) {
+    console.error('Error loading chat:', error);
+  }
+}
+
 async function generateImage() {
   if (!currentChatId) {
     const chat = await createNewChat();
@@ -92,17 +89,14 @@ async function generateImage() {
   userInput.disabled = true;
 
   try {
-    // Add user message
     addMessage(prompt, 'user');
     userInput.value = '';
 
-    // Add loading message
     const loadingMessage = document.createElement('div');
     loadingMessage.className = 'message assistant-message';
     loadingMessage.innerHTML = '<span class="loading-dots">Generating image</span>';
     chatContainer.appendChild(loadingMessage);
 
-    // Make API request
     const response = await fetch(`/api/chats/${currentChatId}/messages`, {
       method: 'POST',
       headers: {
@@ -116,18 +110,13 @@ async function generateImage() {
 
     const messages = await response.json();
     
-    // Remove loading message
-    if (loadingMessage && loadingMessage.parentNode === chatContainer) {
-      chatContainer.removeChild(loadingMessage);
-    }
+    chatContainer.removeChild(loadingMessage);
 
-    // Add AI response with image
     if (messages && messages.length > 1 && messages[1].imageUrl) {
       addMessage(messages[1].content, 'assistant', messages[1].imageUrl);
     } else {
       addMessage('Failed to generate image. Please try again.', 'assistant');
     }
-
   } catch (error) {
     console.error('Error:', error);
     addMessage('Sorry, there was an error generating the image.', 'assistant');
@@ -137,6 +126,12 @@ async function generateImage() {
   }
 }
 
+const chatContainer = document.getElementById('chatContainer');
+const userInput = document.getElementById('userInput');
+const generateBtn = document.getElementById('generateBtn');
+const sidebar = document.getElementById('sidebar');
+const newChatBtn = document.getElementById('newChatBtn');
+
 document.getElementById('messageForm').addEventListener('submit', (e) => {
   e.preventDefault();
   generateImage();
@@ -144,11 +139,9 @@ document.getElementById('messageForm').addEventListener('submit', (e) => {
 
 newChatBtn.addEventListener('click', createNewChat);
 
-// Auto-resize textarea
 userInput.addEventListener('input', function() {
   this.style.height = 'auto';
   this.style.height = (this.scrollHeight) + 'px';
 });
 
-// Load initial chats
 loadChats();
